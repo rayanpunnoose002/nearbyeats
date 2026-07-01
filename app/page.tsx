@@ -203,7 +203,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen px-4 py-10 sm:px-10">
-      <SplashScreen onDone={() => setSplashDone(true)} />
+      {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
 
       {/* Floating food particles */}
       <div className="pointer-events-none" aria-hidden>
