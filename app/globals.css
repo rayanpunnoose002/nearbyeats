@@ -37,21 +37,27 @@ html.dark {
 body {
   color: var(--foreground);
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial, Helvetica, sans-serif;
-  background: linear-gradient(160deg, #ffe4cc 0%, #ffd3e8 30%, #d6e4ff 60%, #cdf5ec 100%);
+  background: linear-gradient(135deg, #ffe4cc, #ffd3e8, #d6e4ff, #cdf5ec, #ffe4cc);
+  background-size: 400% 400%;
   background-attachment: fixed;
   min-height: 100vh;
+  animation: bg-shift 18s ease infinite;
   transition: background 0.5s ease;
 }
 
 html.dark body {
-  background: linear-gradient(160deg, #12091f 0%, #1e0f2e 25%, #0b1628 60%, #050d0a 100%);
+  background: linear-gradient(135deg, #12091f, #1e0f2e, #0b1628, #050d0a, #12091f);
+  background-size: 400% 400%;
   background-attachment: fixed;
+  animation: bg-shift 22s ease infinite;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not(.light):not(.dark) body {
-    background: linear-gradient(160deg, #12091f 0%, #1e0f2e 25%, #0b1628 60%, #050d0a 100%);
+    background: linear-gradient(135deg, #12091f, #1e0f2e, #0b1628, #050d0a, #12091f);
+    background-size: 400% 400%;
     background-attachment: fixed;
+    animation: bg-shift 22s ease infinite;
   }
 }
 
@@ -314,6 +320,12 @@ html.dark .ios-alert-divider-vertical { background: rgba(255,255,255,0.12); }
 }
 
 /* ── Animations ── */
+@keyframes bg-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @keyframes orb-float {
   0%,100% { transform: translate(0,0) scale(1); }
   33%      { transform: translate(24px,-32px) scale(1.04); }
@@ -372,4 +384,38 @@ html.dark .ios-alert-divider-vertical { background: rgba(255,255,255,0.12); }
   width: 6px; height: 6px;
   border-radius: 2px; margin: -3px;
   animation: confetti-burst 0.9s ease-out both;
+}
+
+/* ── Splash screen ── */
+@keyframes splash-mascot-enter {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  55%  { transform: scale(1.12) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes splash-mascot-exit {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(38vw, 38vh) scale(0.35); opacity: 0; }
+}
+
+.splash-mascot-enter { animation: splash-mascot-enter 0.55s cubic-bezier(0.34,1.56,0.64,1) both; }
+.splash-mascot-exit  { animation: splash-mascot-exit  0.75s cubic-bezier(0.4,0,1,1) both; }
+
+/* ── Floating food particles ── */
+@keyframes food-drift {
+  0%   { transform: translateY(105vh) rotate(0deg)  scale(0.7); opacity: 0; }
+  6%   { opacity: 0.22; }
+  94%  { opacity: 0.22; }
+  100% { transform: translateY(-12vh)  rotate(30deg) scale(1.1); opacity: 0; }
+}
+
+.food-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  font-size: 1.6rem;
+  line-height: 1;
+  animation: food-drift linear infinite;
+  will-change: transform, opacity;
+  user-select: none;
 }

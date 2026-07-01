@@ -9,6 +9,7 @@ import Mascot, { type MascotMood } from "@/components/Mascot";
 import IOSAlert from "@/components/IOSAlert";
 import TabBar, { type AppTab } from "@/components/TabBar";
 import JourneyPlanner from "@/components/JourneyPlanner";
+import SplashScreen from "@/components/SplashScreen";
 import type { Filters, RestaurantSummary, DistanceUnit } from "@/lib/types";
 import { getCurrency, currencyForCountry } from "@/lib/types";
 
@@ -44,6 +45,7 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<AppTab>("eats");
 
+  const [splashDone, setSplashDone] = useState(false);
   const [mood, setMood] = useState<MascotMood>("idle");
   const moodTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -186,14 +188,42 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords]);
 
+  const FOOD_PARTICLES = [
+    { emoji: "🍕", left: "8%",  duration: "18s", delay: "0s"   },
+    { emoji: "🌮", left: "20%", duration: "23s", delay: "3s"   },
+    { emoji: "🍜", left: "34%", duration: "19s", delay: "7s"   },
+    { emoji: "🍣", left: "47%", duration: "25s", delay: "1s"   },
+    { emoji: "🍔", left: "61%", duration: "21s", delay: "9s"   },
+    { emoji: "🍱", left: "73%", duration: "17s", delay: "4s"   },
+    { emoji: "🍩", left: "85%", duration: "22s", delay: "12s"  },
+    { emoji: "🥗", left: "14%", duration: "26s", delay: "15s"  },
+    { emoji: "🍛", left: "55%", duration: "20s", delay: "6s"   },
+    { emoji: "🧆", left: "91%", duration: "24s", delay: "10s"  },
+  ];
+
   return (
     <div className="relative min-h-screen px-4 py-10 sm:px-10">
+      <SplashScreen onDone={() => setSplashDone(true)} />
+
+      {/* Floating food particles */}
+      <div className="pointer-events-none" aria-hidden>
+        {FOOD_PARTICLES.map((p, i) => (
+          <span
+            key={i}
+            className="food-particle"
+            style={{ left: p.left, animationDuration: p.duration, animationDelay: p.delay }}
+          >
+            {p.emoji}
+          </span>
+        ))}
+      </div>
+
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
         <div className="orb orb-1" />
         <div className="orb orb-2" />
         <div className="orb orb-3" />
       </div>
-      <Mascot mood={mood} />
+      <Mascot mood={splashDone ? mood : "idle"} />
       <IOSAlert
         open={alertInfo !== null}
         title={alertInfo?.title ?? ""}
