@@ -1,3 +1,5 @@
+import { rankRestaurants } from "./score";
+
 const PLACES_BASE_URL = "https://places.googleapis.com/v1";
 
 export type PriceLevel =
@@ -154,9 +156,7 @@ export async function searchNearby(
     results = results.filter((r) => r.openNow === true);
   }
 
-  results.sort((a, b) => a.distanceMeters - b.distanceMeters);
-
-  return results;
+  return rankRestaurants(results);
 }
 
 const DETAILS_FIELD_MASK = [

@@ -74,6 +74,7 @@ export default function JourneyMap({
     const map = new G.Map(mapDivRef.current, {
       zoom: 8,
       center: originCoords,
+      mapId: "DEMO_MAP_ID",
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
@@ -92,33 +93,24 @@ export default function JourneyMap({
     pts.forEach((p: { lat: number; lng: number }) => bounds.extend(p));
     map.fitBounds(bounds, 48);
 
-    new G.Marker({
-      position: originCoords,
-      map,
-      title: originName,
-      label: { text: "A", color: "white", fontWeight: "bold" },
-      zIndex: 10,
-    });
+    // AdvancedMarkerElement is available via G.marker because we load
+    // the marker library explicitly in the script URL (&libraries=marker)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { AdvancedMarkerElement, PinElement } = (G as any).marker;
 
-    new G.Marker({
-      position: destCoords,
-      map,
-      title: destName,
-      label: { text: "B", color: "white", fontWeight: "bold" },
-      zIndex: 10,
-    });
+    function pin(glyph: string, bg: string) {
+      return new PinElement({ glyph, glyphColor: "white", background: bg, borderColor: bg }).element;
+    }
+
+    new AdvancedMarkerElement({ position: originCoords, map, title: originName, content: pin("A", "#4285F4"), zIndex: 10 });
+    new AdvancedMarkerElement({ position: destCoords,   map, title: destName,   content: pin("B", "#EA4335"), zIndex: 10 });
 
     waypoints.forEach((wp, i) => {
-      new G.Marker({
+      new AdvancedMarkerElement({
         position: { lat: wp.lat, lng: wp.lng },
         map,
         title: wp.label,
-        label: {
-          text: String(i + 1),
-          color: "white",
-          fontWeight: "bold",
-          fontSize: "13px",
-        },
+        content: pin(String(i + 1), "#6366F1"),
         zIndex: 9,
       });
     });
@@ -170,7 +162,7 @@ export default function JourneyMap({
         <>
           <div ref={mapDivRef} className="h-72 w-full sm:h-80" />
           <Script
-            src={`https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}`}
+            src={`https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&libraries=marker`}
             strategy="lazyOnload"
             onReady={initMap}
           />

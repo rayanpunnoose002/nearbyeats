@@ -26,8 +26,8 @@ export default function HotelCard({ hotel, unit, highlighted }: HotelCardProps) 
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") openInMaps();
       }}
-      className={`group cursor-pointer rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 ${
-        highlighted ? "glass-strong" : "glass hover:shadow-xl"
+      className={`group cursor-pointer rounded-2xl p-4 transition-all duration-300 ${
+        highlighted ? "glass-strong ring-2" : "glass-card"
       }`}
       style={highlighted ? { boxShadow: "0 0 0 2px var(--accent-from)" } : undefined}
     >

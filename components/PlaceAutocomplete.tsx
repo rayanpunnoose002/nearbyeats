@@ -39,9 +39,7 @@ export default function PlaceAutocomplete({
     }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/autocomplete?input=${encodeURIComponent(value)}`,
-        );
+        const res = await fetch(`/api/autocomplete?input=${encodeURIComponent(value)}`);
         const data = await res.json();
         const results: Suggestion[] = data.suggestions ?? [];
         setSuggestions(results);
@@ -56,13 +54,9 @@ export default function PlaceAutocomplete({
     };
   }, [value, focused]);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -79,7 +73,7 @@ export default function PlaceAutocomplete({
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1.5">
-      <label className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <label className="text-xs font-semibold uppercase tracking-wider text-[var(--label-tertiary)]">
         {label}
       </label>
       <input
@@ -87,10 +81,7 @@ export default function PlaceAutocomplete({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => {
-          // short delay so click on suggestion registers first
-          setTimeout(() => setFocused(false), 150);
-        }}
+        onBlur={() => setTimeout(() => setFocused(false), 150)}
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
@@ -104,7 +95,6 @@ export default function PlaceAutocomplete({
               key={s.placeId || i}
               type="button"
               onMouseDown={(e) => {
-                // prevent blur before click fires
                 e.preventDefault();
                 handleSelect(s.text);
               }}

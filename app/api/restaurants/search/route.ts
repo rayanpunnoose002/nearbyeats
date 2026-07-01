@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
   const priceLevels = params.get("priceLevels");
   const cuisine = params.get("cuisine");
   const openNow = params.get("openNow");
+  const dietaryPref = params.get("dietaryPref") ?? "both";
 
   if (Number.isNaN(lat) || Number.isNaN(lng)) {
     return NextResponse.json(
@@ -28,6 +29,14 @@ export async function GET(req: NextRequest) {
   );
 
   try {
+    const vegTypes = ["vegetarian_restaurant", "vegan_restaurant"];
+    const includedPrimaryTypes =
+      dietaryPref === "veg"
+        ? vegTypes
+        : cuisine
+        ? [cuisine]
+        : undefined;
+
     const results = await searchNearby({
       lat,
       lng,
@@ -36,7 +45,7 @@ export async function GET(req: NextRequest) {
       priceLevels: priceLevels
         ? (priceLevels.split(",") as PriceLevel[])
         : undefined,
-      includedPrimaryTypes: cuisine ? [cuisine] : undefined,
+      includedPrimaryTypes,
       openNow: openNow === "true",
     });
 

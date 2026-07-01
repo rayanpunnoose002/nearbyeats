@@ -6,11 +6,18 @@ import {
   type Filters,
   type DistanceUnit,
   type CurrencyInfo,
+  type DietaryPref,
   CURRENCIES,
   formatPriceRange,
   milesToKm,
   kmToMiles,
 } from "@/lib/types";
+
+const DIETARY_OPTIONS: { value: DietaryPref; label: string }[] = [
+  { value: "both",   label: "🍽️ Both"    },
+  { value: "veg",    label: "🥗 Veg"     },
+  { value: "nonveg", label: "🍗 Non-Veg" },
+];
 
 interface FilterBarProps {
   filters: Filters;
@@ -152,6 +159,22 @@ export default function FilterBar({
           />
           Open now
         </label>
+      </div>
+
+      <div className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-zinc-700 dark:text-zinc-200">Dietary preference</span>
+        <div className="flex flex-wrap gap-2">
+          {DIETARY_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange({ ...filters, dietaryPref: opt.value })}
+              className={`filter-pill ${filters.dietaryPref === opt.value ? "active" : ""}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5 text-sm">

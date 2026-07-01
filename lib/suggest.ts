@@ -1,12 +1,7 @@
 import type { RestaurantSummary } from "./places";
+import { suggestionWeight } from "./score";
 
-export function weightOf(restaurant: RestaurantSummary): number {
-  const rating = restaurant.rating ?? 3;
-  const ratingCount = restaurant.userRatingCount;
-  const distanceMeters = Math.max(restaurant.distanceMeters, 50);
-
-  return (rating ** 2 * Math.log(ratingCount + 1)) / distanceMeters;
-}
+export { suggestionWeight as weightOf };
 
 export function pickWeightedRandom(
   restaurants: RestaurantSummary[],
@@ -17,7 +12,7 @@ export function pickWeightedRandom(
   const pool = candidates.length > 0 ? candidates : restaurants;
   if (pool.length === 0) return null;
 
-  const weights = pool.map(weightOf);
+  const weights = pool.map(suggestionWeight);
   const total = weights.reduce((sum, w) => sum + w, 0);
   if (total <= 0) return pool[Math.floor(random() * pool.length)];
 

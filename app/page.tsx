@@ -20,6 +20,7 @@ const DEFAULT_FILTERS: Filters = {
   priceLevels: [],
   cuisine: null,
   openNow: false,
+  dietaryPref: "both",
 };
 
 export default function Home() {
@@ -156,6 +157,9 @@ export default function Home() {
       if (currentFilters.cuisine) {
         params.set("cuisine", currentFilters.cuisine);
       }
+      if (currentFilters.dietaryPref !== "both") {
+        params.set("dietaryPref", currentFilters.dietaryPref);
+      }
 
       const res = await fetch(`/api/restaurants/search?${params.toString()}`);
       const data = await res.json();
@@ -183,7 +187,12 @@ export default function Home() {
   }, [coords]);
 
   return (
-    <div className="min-h-screen px-4 py-10 sm:px-10">
+    <div className="relative min-h-screen px-4 py-10 sm:px-10">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+      </div>
       <Mascot mood={mood} />
       <IOSAlert
         open={alertInfo !== null}
@@ -194,15 +203,15 @@ export default function Home() {
       <main className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <header className="animate-fade-in-up">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            <h1 className="accent-gradient-text text-4xl font-bold tracking-tight sm:text-5xl">
               {activeTab === "eats"
                 ? "What’s nearby to eat?"
                 : "Plan a Journey"}
             </h1>
-            <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
               {activeTab === "eats"
                 ? "Stop scrolling. Find a spot, or let us pick one for you."
-                : "Enter your route and we’ll find the best hotels along the way."}
+                : "Enter your route and discover the best food spots along the way."}
             </p>
           </header>
           <div className="animate-fade-in-up">

@@ -25,9 +25,10 @@ export interface JourneyRouteResponse {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { origin, destination } = body as {
+    const { origin, destination, numStops: numStopsOverride } = body as {
       origin?: string;
       destination?: string;
+      numStops?: number;
     };
 
     if (!origin?.trim() || !destination?.trim()) {
@@ -39,7 +40,10 @@ export async function POST(request: NextRequest) {
 
     const route = await computeRoute(origin.trim(), destination.trim());
     const points = decodePolyline(route.encodedPolyline);
-    const numStops = numStopsForDistance(route.distanceMeters);
+    const numStops =
+      typeof numStopsOverride === "number" && numStopsOverride >= 0
+        ? numStopsOverride
+        : numStopsForDistance(route.distanceMeters);
     const waypointCoords = sampleWaypoints(points, route.distanceMeters, numStops);
 
     const waypoints: JourneyWaypoint[] = await Promise.all(

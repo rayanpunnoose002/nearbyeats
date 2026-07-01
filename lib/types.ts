@@ -4,12 +4,15 @@ export type { CurrencyInfo } from "./currency";
 
 export type DistanceUnit = "mi" | "km";
 
+export type DietaryPref = "both" | "veg" | "nonveg";
+
 export interface Filters {
   radiusMiles: number;
   minRating: number | null;
   priceLevels: string[];
   cuisine: string | null;
   openNow: boolean;
+  dietaryPref: DietaryPref;
 }
 
 export const CUISINE_OPTIONS: { label: string; value: string }[] = [
