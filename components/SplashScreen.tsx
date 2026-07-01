@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+// Module-level guard prevents double-trigger from React StrictMode's intentional double-mount
+let _splashGuard = false;
+
 type Phase = "in" | "hold" | "out";
 
 function SplashMascot({ className }: { className?: string }) {
@@ -36,16 +39,18 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   const [shouldShow, setShouldShow] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Phase>("in");
 
-  // Check sessionStorage only after client mount
+  // Check sessionStorage only after client mount.
+  // _splashGuard prevents React StrictMode's double-mount from showing it twice.
   useEffect(() => {
-    const key = "nearbyeats-splash-v1";
-    if (sessionStorage.getItem(key)) {
+    const key = "nearbyeats-splash-v2";
+    if (_splashGuard || sessionStorage.getItem(key)) {
       setShouldShow(false);
       onDone();
-    } else {
-      sessionStorage.setItem(key, "1");
-      setShouldShow(true);
+      return;
     }
+    _splashGuard = true;
+    sessionStorage.setItem(key, "1");
+    setShouldShow(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
