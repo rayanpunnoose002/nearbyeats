@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Module-level guard prevents double-trigger from React StrictMode's intentional double-mount
 let _splashGuard = false;
@@ -39,13 +39,19 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   const [shouldShow, setShouldShow] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Phase>("in");
 
+  // Keep a stable ref so the animation effect never needs onDone as a dependency.
+  // Without this, every parent re-render (new arrow function) re-fires the effect
+  // and restarts the animation timers — causing the splash to show twice.
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
   // Check sessionStorage only after client mount.
   // _splashGuard prevents React StrictMode's double-mount from showing it twice.
   useEffect(() => {
     const key = "nearbyeats-splash-v2";
     if (_splashGuard || sessionStorage.getItem(key)) {
       setShouldShow(false);
-      onDone();
+      onDoneRef.current();
       return;
     }
     _splashGuard = true;
@@ -54,14 +60,14 @@ export default function SplashScreen({ onDone }: { onDone: () => void }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Run animation sequence once we know we should show
+  // Run animation sequence once — depends only on shouldShow, not onDone.
   useEffect(() => {
     if (!shouldShow) return;
     const t1 = setTimeout(() => setPhase("hold"), 500);
     const t2 = setTimeout(() => setPhase("out"),  2400);
-    const t3 = setTimeout(() => onDone(),          3100);
+    const t3 = setTimeout(() => onDoneRef.current(), 3100);
     return () => [t1, t2, t3].forEach(clearTimeout);
-  }, [shouldShow, onDone]);
+  }, [shouldShow]);
 
   if (!shouldShow) return null;
 
