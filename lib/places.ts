@@ -22,6 +22,7 @@ export interface RestaurantSummary {
   distanceMeters: number;
   openNow: boolean | null;
   photoName: string | null;
+  businessStatus: string | null;
 }
 
 export interface PlaceReview {
@@ -81,6 +82,7 @@ const SEARCH_FIELD_MASK = [
   "places.location",
   "places.currentOpeningHours.openNow",
   "places.photos.name",
+  "places.businessStatus",
 ].join(",");
 
 export async function searchNearby(
@@ -139,8 +141,14 @@ export async function searchNearby(
       ),
       openNow: place.currentOpeningHours?.openNow ?? null,
       photoName: place.photos?.[0]?.name ?? null,
+      businessStatus: place.businessStatus ?? null,
     };
   });
+
+  // Remove permanently or temporarily closed businesses immediately — never show them
+  results = results.filter(
+    (r) => r.businessStatus == null || r.businessStatus === "OPERATIONAL",
+  );
 
   if (params.minRating !== undefined) {
     results = results.filter(
@@ -219,6 +227,7 @@ export async function getPlaceDetails(
     ),
     openNow: place.currentOpeningHours?.openNow ?? null,
     photoName: place.photos?.[0]?.name ?? null,
+    businessStatus: place.businessStatus ?? null,
     reviews,
     googleMapsUri: place.googleMapsUri ?? "",
   };

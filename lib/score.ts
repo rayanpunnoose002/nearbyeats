@@ -123,6 +123,19 @@ export function rankRestaurants(
   return [...restaurants].sort(byScore);
 }
 
+/**
+ * Hard minimums for anything that can be actively suggested.
+ * The list view is more lenient; the suggestion button only fires on places
+ * we are genuinely confident about.
+ */
+const SUGGEST_MIN_BAYESIAN_RATING = 4.0;
+const SUGGEST_MIN_REVIEWS = 40;
+
 export function suggestionWeight(r: RestaurantSummary): number {
+  // Never suggest permanently/temporarily closed or operationally unknown places
+  if (r.businessStatus != null && r.businessStatus !== "OPERATIONAL") return 0;
+  // Never suggest places below the confidence floor
+  if (bayesianRating(r) < SUGGEST_MIN_BAYESIAN_RATING) return 0;
+  if (r.userRatingCount < SUGGEST_MIN_REVIEWS) return 0;
   return Math.max(scoreRestaurant(r), 0) ** 3;
 }
