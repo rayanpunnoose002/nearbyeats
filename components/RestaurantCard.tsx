@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PlaceDetails, RestaurantSummary, DistanceUnit, CurrencyInfo } from "@/lib/types";
 import { formatDistance, priceLevelToSymbol, formatPriceRange, googleMapsUrl } from "@/lib/types";
+import { computeBadges } from "@/lib/badges";
+import { isFavorite, toggleFavorite } from "@/lib/favorites";
 
 interface RestaurantCardProps {
   restaurant: RestaurantSummary;
   highlighted?: boolean;
   unit: DistanceUnit;
   currency: CurrencyInfo;
+  onFavoriteToggle?: () => void;
 }
 
 export default function RestaurantCard({
@@ -16,12 +19,22 @@ export default function RestaurantCard({
   highlighted,
   unit,
   currency,
+  onFavoriteToggle,
 }: RestaurantCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [details, setDetails] = useState<PlaceDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Read from localStorage after mount to avoid SSR mismatch
+  useEffect(() => {
+    setSaved(isFavorite(restaurant.placeId));
+  }, [restaurant.placeId]);
+
+  const badges = computeBadges(restaurant);
 
   const photoSrc =
     restaurant.photoName && !imgError
@@ -51,6 +64,29 @@ export default function RestaurantCard({
     window.open(googleMapsUrl(restaurant.placeId, restaurant.name), "_blank", "noopener,noreferrer");
   }
 
+  function handleToggleSave(e: React.MouseEvent) {
+    e.stopPropagation();
+    const next = toggleFavorite(restaurant.placeId);
+    setSaved(next);
+    onFavoriteToggle?.();
+  }
+
+  async function handleShare(e: React.MouseEvent) {
+    e.stopPropagation();
+    const url = googleMapsUrl(restaurant.placeId, restaurant.name);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: restaurant.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // User cancelled share dialog — ignore
+    }
+  }
+
   const mapsUri = details?.googleMapsUri ?? googleMapsUrl(restaurant.placeId, restaurant.name);
 
   return (
@@ -76,6 +112,20 @@ export default function RestaurantCard({
 
         {/* Overlay gradient for text legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+        {/* Save / favourite button */}
+        <button
+          type="button"
+          onClick={handleToggleSave}
+          aria-label={saved ? "Remove from favourites" : "Save to favourites"}
+          className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-sm backdrop-blur-sm transition-all duration-200 ${
+            saved
+              ? "bg-red-500/90 shadow-md"
+              : "bg-black/30 opacity-0 group-hover:opacity-100"
+          }`}
+        >
+          {saved ? "❤️" : "🤍"}
+        </button>
 
         {/* Open/closed badge */}
         {restaurant.openNow !== null && (
@@ -120,6 +170,21 @@ export default function RestaurantCard({
           </p>
         </div>
 
+        {/* Badge pills */}
+        {badges.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {badges.map((b) => (
+              <span
+                key={b.label}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+                style={{ background: b.gradient }}
+              >
+                {b.icon} {b.label}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Rating + price row */}
         <div className="flex flex-wrap items-center gap-3 text-sm">
           {restaurant.rating !== null && (
@@ -154,18 +219,40 @@ export default function RestaurantCard({
           >
             {expanded ? "Hide reviews" : "See reviews"}
           </button>
-          <a
-            href={mapsUri}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-zinc-600 dark:hover:text-zinc-300"
-          >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-            </svg>
-            Open in Maps
-          </a>
+
+          <div className="flex items-center gap-3">
+            {/* Share */}
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-zinc-600 dark:hover:text-zinc-300"
+            >
+              {copied ? (
+                <span className="text-green-500">✓ Copied</span>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z" />
+                  </svg>
+                  Share
+                </>
+              )}
+            </button>
+
+            {/* Open in Maps */}
+            <a
+              href={mapsUri}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-xs text-zinc-400 transition hover:text-zinc-600 dark:hover:text-zinc-300"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+              </svg>
+              Open in Maps
+            </a>
+          </div>
         </div>
 
         {/* ── Expandable reviews ── */}

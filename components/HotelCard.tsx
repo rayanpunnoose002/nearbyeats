@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { RestaurantSummary, DistanceUnit } from "@/lib/types";
 import { formatDistance, priceLevelToSymbol, googleMapsUrl } from "@/lib/types";
+import { computeBadges } from "@/lib/badges";
 
 interface HotelCardProps {
   hotel: RestaurantSummary;
@@ -12,6 +13,8 @@ interface HotelCardProps {
 
 export default function HotelCard({ hotel, unit, highlighted }: HotelCardProps) {
   const [imgError, setImgError] = useState(false);
+
+  const badges = computeBadges(hotel);
 
   const photoSrc =
     hotel.photoName && !imgError
@@ -84,6 +87,21 @@ export default function HotelCard({ hotel, unit, highlighted }: HotelCardProps) 
             {hotel.address}
           </p>
         </div>
+
+        {/* Badge pills */}
+        {badges.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {badges.map((b) => (
+              <span
+                key={b.label}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+                style={{ background: b.gradient }}
+              >
+                {b.icon} {b.label}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-auto flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">

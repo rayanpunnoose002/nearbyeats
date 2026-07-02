@@ -12,6 +12,7 @@ import JourneyPlanner from "@/components/JourneyPlanner";
 import SplashScreen from "@/components/SplashScreen";
 import type { Filters, RestaurantSummary, DistanceUnit } from "@/lib/types";
 import { getCurrency, currencyForCountry } from "@/lib/types";
+import { isFavorite, getFavoriteIds } from "@/lib/favorites";
 
 type Coords = { lat: number; lng: number };
 
@@ -44,6 +45,9 @@ export default function Home() {
   const currency = getCurrency(currencyCode);
 
   const [activeTab, setActiveTab] = useState<AppTab>("eats");
+
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [favoriteVersion, setFavoriteVersion] = useState(0);
 
   const [splashDone, setSplashDone] = useState(false);
   const [mood, setMood] = useState<MascotMood>("idle");
@@ -187,6 +191,16 @@ export default function Home() {
     if (coords) runSearch(coords, filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords]);
+
+  // When showSavedOnly is on, filter results to saved places.
+  // favoriteVersion increments when any card heart is toggled, re-reading localStorage.
+  const savedIds = showSavedOnly || favoriteVersion >= 0
+    ? new Set(getFavoriteIds())
+    : new Set<string>();
+  const displayResults = showSavedOnly
+    ? results.filter((r) => savedIds.has(r.placeId))
+    : results;
+  const savedCount = results.filter((r) => savedIds.has(r.placeId)).length;
 
   const FOOD_PARTICLES = [
     { emoji: "🍕", left: "8%",  duration: "18s", delay: "0s"   },
@@ -378,6 +392,19 @@ export default function Home() {
                     {results.length} spot{results.length !== 1 ? "s" : ""} found
                   </span>
                 )}
+                {savedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSavedOnly((p) => !p)}
+                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                      showSavedOnly
+                        ? "bg-red-500 text-white shadow-md"
+                        : "glass text-zinc-600 hover:text-red-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    {showSavedOnly ? "❤️" : "🤍"} Saved{savedCount > 0 ? ` (${savedCount})` : ""}
+                  </button>
+                )}
               </div>
               <SuggestButton coords={coords} filters={filters} onPick={setSuggested} />
             </div>
@@ -387,7 +414,13 @@ export default function Home() {
                 <h2 className="mb-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
                   Tonight&apos;s pick ✨
                 </h2>
-                <RestaurantCard restaurant={suggested} highlighted unit={unit} currency={currency} />
+                <RestaurantCard
+                  restaurant={suggested}
+                  highlighted
+                  unit={unit}
+                  currency={currency}
+                  onFavoriteToggle={() => setFavoriteVersion((v) => v + 1)}
+                />
               </div>
             )}
 
@@ -408,8 +441,16 @@ export default function Home() {
               </div>
             )}
 
+            {showSavedOnly && displayResults.length === 0 && (
+              <div className="glass animate-fade-in-up rounded-2xl p-6 text-center">
+                <p className="text-2xl">🤍</p>
+                <p className="mt-2 font-medium text-zinc-700 dark:text-zinc-300">No saved restaurants</p>
+                <p className="mt-1 text-sm text-zinc-500">Tap the heart on any card to save it here.</p>
+              </div>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
-              {results
+              {displayResults
                 .filter((r) => r.placeId !== suggested?.placeId)
                 .map((r, i) => (
                   <div
@@ -417,7 +458,12 @@ export default function Home() {
                     className="animate-fade-in-up"
                     style={{ animationDelay: `${Math.min(i * 50, 500)}ms` }}
                   >
-                    <RestaurantCard restaurant={r} unit={unit} currency={currency} />
+                    <RestaurantCard
+                      restaurant={r}
+                      unit={unit}
+                      currency={currency}
+                      onFavoriteToggle={() => setFavoriteVersion((v) => v + 1)}
+                    />
                   </div>
                 ))}
             </div>

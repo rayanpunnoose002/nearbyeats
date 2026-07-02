@@ -13,6 +13,14 @@ const CRITICAL_FLAGS = [
   "hair in", "foreign object", "vomit", "diarrhea", "diarrhoea",
   "raw chicken", "undercooked", "food was off", "food tasted off",
   "smelled rotten", "rotten",
+  // Illness and safety additions
+  "threw up", "vomiting", "allergic reaction", "stomach cramps after",
+  "norovirus", "salmonella", "e. coli", "e coli",
+  "health violation", "health department", "closed by health",
+  "health inspection failed", "food contamination",
+  // Severe hygiene
+  "cockroach in my food", "bug in my food", "bug in the food",
+  "worm in", "fly in my food", "insect in",
 ];
 
 /** Patterns that indicate chronic service/quality failure across multiple reviews. */
@@ -21,6 +29,12 @@ const SOFT_FLAGS = [
   "avoid", "stay away", "do not go", "don't go", "don't eat",
   "terrible food", "disgusting food", "horrible food", "inedible",
   "rude staff", "extremely rude", "very rude",
+  // Quality and experience failures
+  "complete waste", "waste of money", "not worth", "overpriced",
+  "will not return", "would not recommend", "cannot recommend",
+  "management is terrible", "owner was rude",
+  "extremely slow", "waited over an hour",
+  "order was wrong", "got the wrong order",
 ];
 
 function normalise(text: string): string {
