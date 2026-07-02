@@ -202,7 +202,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="relative min-h-screen px-4 py-10 sm:px-10">
+    <div className="relative min-h-screen px-4 pb-16 pt-6 sm:px-8 sm:pt-8">
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
 
       {/* Floating food particles */}
@@ -230,26 +230,27 @@ export default function Home() {
         message={alertInfo?.message ?? ""}
         onClose={() => setAlertInfo(null)}
       />
-      <main className="mx-auto flex max-w-4xl flex-col gap-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <header className="animate-fade-in-up">
-            <h1 className="accent-gradient-text text-4xl font-bold tracking-tight sm:text-5xl">
-              {activeTab === "eats"
-                ? "What’s nearby to eat?"
-                : "Plan a Journey"}
-            </h1>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              {activeTab === "eats"
-                ? "Stop scrolling. Find a spot, or let us pick one for you."
-                : "Enter your route and discover the best food spots along the way."}
-            </p>
-          </header>
-          <div className="animate-fade-in-up">
-            <ThemeSwitcher />
+      <main className="mx-auto flex max-w-4xl flex-col gap-5">
+        {/* ── Brand nav bar ── */}
+        <div className="animate-fade-in-up flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="glass flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-md">
+              🍽️
+            </div>
+            <div>
+              <p className="accent-gradient-text text-2xl font-extrabold leading-none tracking-tight">
+                NearbyEats
+              </p>
+              <p className="mt-0.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Smart restaurant finder
+              </p>
+            </div>
           </div>
+          <ThemeSwitcher />
         </div>
 
-        <div className="animate-fade-in-up">
+        {/* ── Centered tab bar ── */}
+        <div className="animate-fade-in-up flex justify-center">
           <TabBar activeTab={activeTab} onChange={setActiveTab} />
         </div>
 

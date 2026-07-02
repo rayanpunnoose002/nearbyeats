@@ -9,7 +9,7 @@ interface TabBarProps {
 
 export default function TabBar({ activeTab, onChange }: TabBarProps) {
   return (
-    <div className="segmented self-start">
+    <div className="segmented">
       <button
         type="button"
         className={activeTab === "eats" ? "active" : ""}
