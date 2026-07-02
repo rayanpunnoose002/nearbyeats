@@ -630,34 +630,50 @@ export default function JourneyPlanner({
 
       {/* ── Food stops ── */}
       {journey?.waypoints.map((wp, i) => (
-        <div key={`${wp.lat}-${wp.lng}`} className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/30 dark:bg-white/10" />
-            <span className="accent-gradient-text whitespace-nowrap text-sm font-bold">
-              🍽️ {wp.label}
-            </span>
-            <div className="h-px flex-1 bg-white/30 dark:bg-white/10" />
+        <div key={`${wp.lat}-${wp.lng}`} className="flex flex-col gap-4">
+
+          {/* Stop section header */}
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 stop-divider" />
+            <div className="glass flex items-center gap-2.5 rounded-full px-4 py-2 shadow-md">
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
+                style={{ background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))" }}
+              >
+                {i + 1}
+              </span>
+              <span className="accent-gradient-text whitespace-nowrap text-sm font-semibold">
+                {wp.label}
+              </span>
+            </div>
+            <div className="h-px flex-1 stop-divider" />
           </div>
 
           {loadingStops[i] && (
             <div className="glass flex items-center gap-3 rounded-2xl p-4 text-zinc-600 dark:text-zinc-300">
               <span className="accent-gradient h-2 w-2 animate-ping rounded-full" />
-              Finding restaurants nearby…
+              Finding the best restaurants nearby…
             </div>
           )}
 
           {!loadingStops[i] && (hotelsByStop[i]?.length ?? 0) === 0 && (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No restaurants found near this stop. Try adjusting your filters.
-            </p>
+            <div className="glass animate-fade-in-up flex flex-col items-center gap-2 rounded-2xl p-5 text-center">
+              <p className="text-2xl">🤔</p>
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                No restaurants found near this stop
+              </p>
+              <p className="text-xs text-zinc-400">
+                Try adjusting your filters or loosening the budget/rating requirements.
+              </p>
+            </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(hotelsByStop[i] ?? []).map((hotel, j) => (
               <div
                 key={hotel.placeId}
                 className="animate-fade-in-up"
-                style={{ animationDelay: `${Math.min(j * 60, 360)}ms` }}
+                style={{ animationDelay: `${Math.min(j * 80, 400)}ms` }}
               >
                 <HotelCard hotel={hotel} unit={unit} />
               </div>
