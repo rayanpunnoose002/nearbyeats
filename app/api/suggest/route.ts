@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientIP } from "@/lib/ratelimit";
 import { searchNearby, getPlaceDetails, type PriceLevel, type RestaurantSummary } from "@/lib/places";
 import { hasCriticalFlag, reviewTrustScore } from "@/lib/redflags";
 import { bayesianRating, scoreRestaurant } from "@/lib/score";
@@ -9,6 +10,10 @@ const MAX_RADIUS_METERS = 50000;
 const VERIFY_TOP_N = 6;
 
 export async function POST(req: NextRequest) {
+  if (!checkRateLimit(getClientIP(req))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = await req.json();
   const {
     lat,

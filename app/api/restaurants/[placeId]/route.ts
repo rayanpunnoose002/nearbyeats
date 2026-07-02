@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPlaceDetails } from "@/lib/places";
+import { checkRateLimit, getClientIP } from "@/lib/ratelimit";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  if (!checkRateLimit(getClientIP(req))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { placeId } = await params;
   const search = req.nextUrl.searchParams;
   const lat = parseFloat(search.get("lat") ?? "");

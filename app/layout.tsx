@@ -16,12 +16,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nearby Eats",
-  description: "Find nearby restaurants and let us suggest where to eat.",
+  title: {
+    default: "NearbyEats — Smart Restaurant Finder",
+    template: "%s | NearbyEats",
+  },
+  description:
+    "Stop wondering where to eat. NearbyEats finds the best restaurants near you using smart scoring, real reviews, and food-safety data. Veg-friendly filter, journey planner, and one-tap suggestions included.",
+  keywords: ["restaurant finder", "nearby restaurants", "food near me", "best restaurants", "veg restaurants", "journey food planner"],
+  openGraph: {
+    type: "website",
+    title: "NearbyEats — Smart Restaurant Finder",
+    description: "Find the best restaurants near you. Smart picks, safety-checked, veg-friendly.",
+    siteName: "NearbyEats",
+  },
+  twitter: {
+    card: "summary",
+    title: "NearbyEats — Smart Restaurant Finder",
+    description: "Find the best restaurants near you. Smart picks, safety-checked, veg-friendly.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Nearby Eats",
+    title: "NearbyEats",
   },
 };
 

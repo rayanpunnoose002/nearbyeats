@@ -260,33 +260,95 @@ export default function Home() {
             onMoodChange={handleJourneyMood}
           />
         ) : !coords ? (
-          <div className="glass animate-pop-in flex flex-col gap-3 rounded-2xl p-5">
-            <button
-              type="button"
-              onClick={useBrowserLocation}
-              disabled={locating}
-              className="accent-gradient self-start rounded-full px-5 py-2.5 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          /* ── Landing hero (no location yet) ── */
+          <div className="flex flex-col items-center gap-7 py-4 text-center">
+            {/* Tagline */}
+            <div className="animate-pop-in">
+              <p className="text-6xl">🍽️</p>
+              <h2 className="mt-3 text-2xl font-bold text-zinc-800 dark:text-zinc-100 sm:text-3xl">
+                Stop wondering.<br />Start eating.
+              </h2>
+              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+                Smart restaurant picks using live ratings, real reviews, and food-safety data — not just Google&apos;s default sort.
+              </p>
+            </div>
+
+            {/* Feature chips */}
+            <div className="animate-fade-in-up flex flex-wrap justify-center gap-2" style={{ animationDelay: "80ms" }}>
+              {[
+                { icon: "⚡", label: "Smart picks" },
+                { icon: "🌿", label: "Veg friendly" },
+                { icon: "🗺️", label: "Journey planner" },
+                { icon: "🛡️", label: "Safety checked" },
+                { icon: "⭐", label: "Top rated only" },
+              ].map(({ icon, label }) => (
+                <span
+                  key={label}
+                  className="glass rounded-full px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {icon} {label}
+                </span>
+              ))}
+            </div>
+
+            {/* Location input card */}
+            <div
+              className="glass animate-fade-in-up w-full max-w-md rounded-2xl p-5"
+              style={{ animationDelay: "160ms" }}
             >
-              {locating ? "Locating…" : "Use my location"}
-            </button>
-            <form onSubmit={handleAddressSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={addressInput}
-                onChange={(e) => setAddressInput(e.target.value)}
-                placeholder="Or enter an address / zip code"
-                className="flex-1 rounded-xl border border-white/40 bg-white/40 px-3 py-2 backdrop-blur-sm transition focus:bg-white/70 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:focus:bg-black/40"
-              />
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                Find restaurants near you
+              </p>
               <button
-                type="submit"
-                className="rounded-xl bg-white/50 px-4 py-2 font-medium backdrop-blur-sm transition hover:bg-white/70 active:scale-95 dark:bg-white/10 dark:hover:bg-white/20"
+                type="button"
+                onClick={useBrowserLocation}
+                disabled={locating}
+                className="shine-btn accent-gradient flex w-full items-center justify-center gap-2 rounded-full py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
               >
-                Go
+                📍 {locating ? "Finding you…" : "Use my location"}
               </button>
-            </form>
-            {locationError && (
-              <p className="animate-fade-in-up text-sm text-red-500">{locationError}</p>
-            )}
+              <div className="my-3 flex items-center gap-3 text-xs text-zinc-400">
+                <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
+                or enter an address
+                <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
+              </div>
+              <form onSubmit={handleAddressSubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  value={addressInput}
+                  onChange={(e) => setAddressInput(e.target.value)}
+                  placeholder="City, address or zip code…"
+                  className="flex-1 rounded-xl border border-white/40 bg-white/40 px-3 py-2 text-sm backdrop-blur-sm transition focus:bg-white/70 focus:outline-none dark:border-white/10 dark:bg-black/20 dark:focus:bg-black/40"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-white/60 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition hover:bg-white/80 active:scale-95 dark:bg-white/10 dark:hover:bg-white/20"
+                >
+                  Go →
+                </button>
+              </form>
+              {locationError && (
+                <p className="animate-fade-in-up mt-2 text-center text-sm text-red-500">{locationError}</p>
+              )}
+            </div>
+
+            {/* How it works */}
+            <div
+              className="animate-fade-in-up grid w-full max-w-md grid-cols-3 gap-3"
+              style={{ animationDelay: "240ms" }}
+            >
+              {[
+                { emoji: "📍", title: "Set location", desc: "GPS or type an address" },
+                { emoji: "🔍", title: "Browse eats", desc: "Top-scored spots near you" },
+                { emoji: "✨", title: "Pick or let us", desc: "One-tap if you're stuck" },
+              ].map(({ emoji, title, desc }) => (
+                <div key={title} className="glass rounded-xl p-3">
+                  <p className="text-2xl">{emoji}</p>
+                  <p className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">{title}</p>
+                  <p className="mt-0.5 text-xs leading-tight text-zinc-500 dark:text-zinc-400">{desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -302,20 +364,27 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => runSearch(coords, filters)}
-                className="accent-text text-sm font-medium transition hover:underline"
-              >
-                Refresh results
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => runSearch(coords, filters)}
+                  className="accent-text text-sm font-medium transition hover:underline"
+                >
+                  Refresh
+                </button>
+                {!searching && results.length > 0 && (
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                    {results.length} spot{results.length !== 1 ? "s" : ""} found
+                  </span>
+                )}
+              </div>
               <SuggestButton coords={coords} filters={filters} onPick={setSuggested} />
             </div>
 
             {suggested && (
               <div className="animate-pop-in">
                 <h2 className="mb-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-                  Tonight&apos;s pick:
+                  Tonight&apos;s pick ✨
                 </h2>
                 <RestaurantCard restaurant={suggested} highlighted unit={unit} currency={currency} />
               </div>
@@ -324,31 +393,46 @@ export default function Home() {
             {searching && (
               <div className="glass flex items-center gap-3 rounded-2xl p-4 text-zinc-600 dark:text-zinc-300">
                 <span className="accent-gradient h-2 w-2 animate-ping rounded-full" />
-                Searching nearby restaurants…
+                Finding the best spots near you…
               </div>
             )}
             {searchError && (
               <p className="animate-fade-in-up text-red-500">{searchError}</p>
             )}
             {!searching && !searchError && results.length === 0 && (
-              <p className="animate-fade-in-up text-zinc-500 dark:text-zinc-400">
-                No restaurants found. Try widening your radius or loosening filters.
-              </p>
+              <div className="glass animate-fade-in-up rounded-2xl p-6 text-center">
+                <p className="text-2xl">🔍</p>
+                <p className="mt-2 font-medium text-zinc-700 dark:text-zinc-300">No restaurants found</p>
+                <p className="mt-1 text-sm text-zinc-500">Try widening your radius or loosening filters.</p>
+              </div>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {results
                 .filter((r) => r.placeId !== suggested?.placeId)
                 .map((r, i) => (
                   <div
                     key={r.placeId}
                     className="animate-fade-in-up"
-                    style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
+                    style={{ animationDelay: `${Math.min(i * 50, 500)}ms` }}
                   >
                     <RestaurantCard restaurant={r} unit={unit} currency={currency} />
                   </div>
                 ))}
             </div>
+
+            {/* Google attribution — required by Places API ToS */}
+            {!searching && results.length > 0 && (
+              <p className="flex items-center justify-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-600">
+                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Powered by Google
+              </p>
+            )}
           </>
         )}
       </main>

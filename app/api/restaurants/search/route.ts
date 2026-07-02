@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchNearby, type PriceLevel } from "@/lib/places";
+import { checkRateLimit, getClientIP } from "@/lib/ratelimit";
 
 const MILES_TO_METERS = 1609.34;
 const MAX_RADIUS_METERS = 50000;
 
 export async function GET(req: NextRequest) {
+  if (!checkRateLimit(getClientIP(req))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const params = req.nextUrl.searchParams;
 
   const lat = parseFloat(params.get("lat") ?? "");
