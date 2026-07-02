@@ -267,48 +267,116 @@ export default function JourneyPlanner({
     }));
   }
 
+  const hasJourney = !!journey;
+
   return (
     <div className="flex flex-col gap-5">
 
+      {/* ── Hero (only before first journey is planned) ── */}
+      {!hasJourney && !planning && (
+        <div className="animate-fade-in-up flex flex-col items-center gap-4 text-center">
+          <div className="glass flex h-16 w-16 items-center justify-center rounded-2xl text-4xl shadow-lg">
+            🗺️
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 sm:text-2xl">
+              Plan a road trip.<br />Never miss a great meal.
+            </h2>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+              Enter your start and end points. We&apos;ll find top-rated restaurants at every stop along the way.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[
+              { icon: "🗺️", label: "Smart waypoints" },
+              { icon: "🍽️", label: "Food every stop" },
+              { icon: "⭐", label: "Quality-scored" },
+              { icon: "🌿", label: "Veg filter" },
+              { icon: "🔄", label: "Live updates" },
+            ].map(({ icon, label }) => (
+              <span
+                key={label}
+                className="glass rounded-full px-3 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-400"
+              >
+                {icon} {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Route input card ── */}
       <div className="glass animate-pop-in rounded-2xl p-5">
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
-          Where are you heading?
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+          Your route
         </h2>
+
         <form onSubmit={handlePlan} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <PlaceAutocomplete
-              label="From"
-              value={origin}
-              onChange={setOrigin}
-              placeholder="e.g. London, UK"
-              disabled={planning || locatingOrigin}
+          {/* From / To with visual connector */}
+          <div className="relative flex flex-col gap-3 pl-8">
+            {/* Vertical connector line */}
+            <div
+              className="absolute left-3 top-4 bottom-4 w-0.5 rounded-full"
+              style={{ background: "linear-gradient(to bottom, var(--accent-from), var(--accent-to))" }}
+              aria-hidden
             />
-            <button
-              type="button"
-              onClick={useCurrentLocation}
-              disabled={locatingOrigin || planning}
-              className="self-start text-xs font-medium text-indigo-500 transition hover:underline disabled:opacity-50 dark:text-indigo-400"
-            >
-              {locatingOrigin ? "Locating…" : "📍 Use my current location"}
-            </button>
-            {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+
+            {/* Origin */}
+            <div className="relative">
+              <div
+                className="absolute -left-8 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[10px] font-bold text-white shadow"
+                style={{ background: "var(--accent-from)" }}
+                aria-hidden
+              >
+                A
+              </div>
+              <PlaceAutocomplete
+                label="From"
+                value={origin}
+                onChange={setOrigin}
+                placeholder="e.g. London, UK"
+                disabled={planning || locatingOrigin}
+              />
+            </div>
+
+            {/* Destination */}
+            <div className="relative">
+              <div
+                className="absolute -left-8 top-1/2 z-10 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-[10px] font-bold text-white shadow"
+                style={{ background: "var(--accent-to)" }}
+                aria-hidden
+              >
+                B
+              </div>
+              <PlaceAutocomplete
+                label="To"
+                value={destination}
+                onChange={setDestination}
+                placeholder="e.g. Edinburgh, UK"
+                disabled={planning}
+              />
+            </div>
           </div>
-          <PlaceAutocomplete
-            label="To"
-            value={destination}
-            onChange={setDestination}
-            placeholder="e.g. Edinburgh, UK"
-            disabled={planning}
-          />
+
+          <button
+            type="button"
+            onClick={useCurrentLocation}
+            disabled={locatingOrigin || planning}
+            className="self-start text-xs font-medium text-indigo-500 transition hover:underline disabled:opacity-50 dark:text-indigo-400"
+          >
+            {locatingOrigin ? "Locating…" : "📍 Use my current location as start"}
+          </button>
+          {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+
           <button
             type="submit"
             disabled={planning || !origin.trim() || !destination.trim()}
-            className="shine-btn accent-gradient mt-1 rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+            className="shine-btn accent-gradient mt-1 rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
           >
             {planning ? "Planning your journey…" : "Plan Journey →"}
           </button>
         </form>
+
         {error && (
           <p className="mt-3 animate-fade-in-up text-sm text-red-500">{error}</p>
         )}
@@ -493,6 +561,49 @@ export default function JourneyPlanner({
           </div>
         )}
       </div>
+
+      {/* ── Empty-state route preview (before planning) ── */}
+      {!hasJourney && !planning && (
+        <div className="glass animate-fade-in-up overflow-hidden rounded-2xl p-5">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+            What you&apos;ll get
+          </p>
+          {/* Stylised route spine */}
+          <div className="relative flex flex-col gap-6 pl-6">
+            <div className="absolute left-2 top-2 bottom-2 w-0.5 rounded-full bg-gradient-to-b from-orange-300 via-purple-300 to-pink-300 opacity-60" aria-hidden />
+
+            {[
+              { dot: "🟠", label: "Start", note: "Your origin" },
+              { dot: "🟣", label: "Stop 1", note: "Top restaurants near this waypoint" },
+              { dot: "🟣", label: "Stop 2", note: "More great spots along the way" },
+              { dot: "🩷", label: "Destination", note: "Your end point" },
+            ].map(({ dot, label, note }, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 text-sm" aria-hidden>{dot}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{label}</p>
+                  <p className="text-xs text-zinc-400">{note}</p>
+                  {(i === 1 || i === 2) && (
+                    <div className="mt-2 flex gap-2">
+                      {[1, 2, 3].map((k) => (
+                        <div
+                          key={k}
+                          className="h-10 flex-1 rounded-xl shimmer"
+                          style={{ animationDelay: `${k * 150}ms` }}
+                          aria-hidden
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-xs text-zinc-400">
+            Enter your route above to see real restaurant picks ↑
+          </p>
+        </div>
+      )}
 
       {/* ── Route map ── */}
       {journey && (
