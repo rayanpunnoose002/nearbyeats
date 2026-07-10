@@ -6,12 +6,19 @@ import { formatDistance, priceLevelToSymbol, formatPriceRange, googleMapsUrl } f
 import { computeBadges } from "@/lib/badges";
 import { isFavorite, toggleFavorite } from "@/lib/favorites";
 
+interface AISummary {
+  pros: string[];
+  cons: string[];
+  vibe: string;
+}
+
 interface RestaurantCardProps {
   restaurant: RestaurantSummary;
   highlighted?: boolean;
   unit: DistanceUnit;
   currency: CurrencyInfo;
   onFavoriteToggle?: () => void;
+  onView?: () => void;
 }
 
 export default function RestaurantCard({
@@ -20,6 +27,7 @@ export default function RestaurantCard({
   unit,
   currency,
   onFavoriteToggle,
+  onView,
 }: RestaurantCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [details, setDetails] = useState<PlaceDetails | null>(null);
@@ -28,8 +36,9 @@ export default function RestaurantCard({
   const [imgError, setImgError] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
 
-  // Read from localStorage after mount to avoid SSR mismatch
   useEffect(() => {
     setSaved(isFavorite(restaurant.placeId));
   }, [restaurant.placeId]);
@@ -42,7 +51,9 @@ export default function RestaurantCard({
       : null;
 
   async function handleExpand() {
+    const isFirstOpen = !expanded && !details;
     setExpanded((prev) => !prev);
+    if (isFirstOpen) onView?.();
     if (details || expanded) return;
     setLoadingDetails(true);
     setDetailsError(null);
@@ -87,7 +98,29 @@ export default function RestaurantCard({
     }
   }
 
+  async function fetchAISummary(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!details || details.reviews.length < 2) return;
+    setLoadingAI(true);
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews: details.reviews, name: restaurant.name }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.pros)) setAiSummary(data as AISummary);
+      }
+    } catch {
+      // Silently fail — not critical
+    } finally {
+      setLoadingAI(false);
+    }
+  }
+
   const mapsUri = details?.googleMapsUri ?? googleMapsUrl(restaurant.placeId, restaurant.name);
+  const hasServiceInfo = restaurant.dineIn !== null || restaurant.takeout !== null || restaurant.delivery !== null;
 
   return (
     <div
@@ -110,18 +143,15 @@ export default function RestaurantCard({
           <div className="accent-gradient h-full w-full opacity-40" />
         )}
 
-        {/* Overlay gradient for text legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-        {/* Save / favourite button */}
+        {/* Save button */}
         <button
           type="button"
           onClick={handleToggleSave}
           aria-label={saved ? "Remove from favourites" : "Save to favourites"}
           className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-sm backdrop-blur-sm transition-all duration-200 ${
-            saved
-              ? "bg-red-500/90 shadow-md"
-              : "bg-black/30 opacity-0 group-hover:opacity-100"
+            saved ? "bg-red-500/90 shadow-md" : "bg-black/30 opacity-0 group-hover:opacity-100"
           }`}
         >
           {saved ? "❤️" : "🤍"}
@@ -134,21 +164,15 @@ export default function RestaurantCard({
               restaurant.openNow ? "bg-green-500/80" : "bg-red-500/75"
             }`}
           >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                restaurant.openNow ? "animate-pulse bg-white" : "bg-white/60"
-              }`}
-            />
+            <span className={`h-1.5 w-1.5 rounded-full ${restaurant.openNow ? "animate-pulse bg-white" : "bg-white/60"}`} />
             {restaurant.openNow ? "Open" : "Closed"}
           </span>
         )}
 
-        {/* Distance badge */}
         <span className="absolute bottom-2 left-3 rounded-full bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
           {formatDistance(restaurant.distanceMeters, unit)} away
         </span>
 
-        {/* Maps shortcut on hover */}
         <button
           type="button"
           onClick={openInMaps}
@@ -170,7 +194,7 @@ export default function RestaurantCard({
           </p>
         </div>
 
-        {/* Badge pills */}
+        {/* Quality badges */}
         {badges.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {badges.map((b) => (
@@ -210,6 +234,27 @@ export default function RestaurantCard({
           )}
         </div>
 
+        {/* Service badges */}
+        {hasServiceInfo && (
+          <div className="flex flex-wrap gap-1">
+            {restaurant.dineIn && (
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                🪑 Dine-in
+              </span>
+            )}
+            {restaurant.takeout && (
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                🥡 Takeout
+              </span>
+            )}
+            {restaurant.delivery && (
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                🛵 Delivery
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Actions row */}
         <div className="mt-auto flex items-center justify-between gap-2">
           <button
@@ -221,7 +266,6 @@ export default function RestaurantCard({
           </button>
 
           <div className="flex items-center gap-3">
-            {/* Share */}
             <button
               type="button"
               onClick={handleShare}
@@ -239,7 +283,6 @@ export default function RestaurantCard({
               )}
             </button>
 
-            {/* Open in Maps */}
             <a
               href={mapsUri}
               target="_blank"
@@ -285,6 +328,55 @@ export default function RestaurantCard({
                 <p className="mt-0.5 text-zinc-600 dark:text-zinc-300">{review.text}</p>
               </div>
             ))}
+
+            {/* AI Summary */}
+            {details && (details.reviews.length >= 2) && !aiSummary && !loadingAI && (
+              <button
+                type="button"
+                onClick={fetchAISummary}
+                className="flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-600 transition hover:bg-violet-500/20 dark:text-violet-400"
+              >
+                ✨ AI Summary
+              </button>
+            )}
+            {loadingAI && (
+              <div className="space-y-1.5">
+                <div className="shimmer h-3 w-full rounded" />
+                <div className="shimmer h-3 w-3/4 rounded" />
+                <div className="shimmer h-3 w-5/6 rounded" />
+              </div>
+            )}
+            {aiSummary && (
+              <div className="animate-fade-in-up rounded-xl bg-violet-500/10 p-3 dark:bg-violet-500/5">
+                <p className="mb-2 text-xs font-semibold text-violet-600 dark:text-violet-400">
+                  ✨ AI Summary
+                </p>
+                <p className="mb-2.5 text-xs italic text-zinc-500 dark:text-zinc-400">
+                  {aiSummary.vibe}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    {aiSummary.pros.map((p, i) => (
+                      <p key={i} className="flex items-start gap-1 text-xs text-zinc-700 dark:text-zinc-300">
+                        <span className="mt-0.5 shrink-0 text-green-500">✓</span>
+                        {p}
+                      </p>
+                    ))}
+                  </div>
+                  {aiSummary.cons.length > 0 && (
+                    <div className="space-y-1">
+                      {aiSummary.cons.map((c, i) => (
+                        <p key={i} className="flex items-start gap-1 text-xs text-zinc-700 dark:text-zinc-300">
+                          <span className="mt-0.5 shrink-0 text-zinc-400">−</span>
+                          {c}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Google attribution — required by Places API ToS */}
             {details && (
               <a

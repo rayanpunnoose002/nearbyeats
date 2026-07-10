@@ -16,6 +16,7 @@ import {
 const DIETARY_OPTIONS: { value: DietaryPref; label: string }[] = [
   { value: "both",   label: "🍽️ Both"    },
   { value: "veg",    label: "🥗 Veg"     },
+  { value: "vegan",  label: "🌱 Vegan"   },
   { value: "nonveg", label: "🍗 Non-Veg" },
 ];
 

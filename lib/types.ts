@@ -4,7 +4,9 @@ export type { CurrencyInfo } from "./currency";
 
 export type DistanceUnit = "mi" | "km";
 
-export type DietaryPref = "both" | "veg" | "nonveg";
+export type DietaryPref = "both" | "veg" | "vegan" | "nonveg";
+
+export type SortBy = "best" | "rating" | "distance" | "popular";
 
 export interface Filters {
   radiusMiles: number;

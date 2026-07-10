@@ -23,6 +23,9 @@ export interface RestaurantSummary {
   openNow: boolean | null;
   photoName: string | null;
   businessStatus: string | null;
+  delivery: boolean | null;
+  dineIn: boolean | null;
+  takeout: boolean | null;
 }
 
 export interface PlaceReview {
@@ -83,6 +86,9 @@ const SEARCH_FIELD_MASK = [
   "places.currentOpeningHours.openNow",
   "places.photos.name",
   "places.businessStatus",
+  "places.delivery",
+  "places.dineIn",
+  "places.takeout",
 ].join(",");
 
 export async function searchNearby(
@@ -142,6 +148,9 @@ export async function searchNearby(
       openNow: place.currentOpeningHours?.openNow ?? null,
       photoName: place.photos?.[0]?.name ?? null,
       businessStatus: place.businessStatus ?? null,
+      delivery: typeof place.delivery === "boolean" ? place.delivery : null,
+      dineIn: typeof place.dineIn === "boolean" ? place.dineIn : null,
+      takeout: typeof place.takeout === "boolean" ? place.takeout : null,
     };
   });
 
@@ -179,6 +188,9 @@ const DETAILS_FIELD_MASK = [
   "photos.name",
   "reviews",
   "googleMapsUri",
+  "delivery",
+  "dineIn",
+  "takeout",
 ].join(",");
 
 export async function getPlaceDetails(
@@ -228,6 +240,9 @@ export async function getPlaceDetails(
     openNow: place.currentOpeningHours?.openNow ?? null,
     photoName: place.photos?.[0]?.name ?? null,
     businessStatus: place.businessStatus ?? null,
+    delivery: typeof place.delivery === "boolean" ? place.delivery : null,
+    dineIn: typeof place.dineIn === "boolean" ? place.dineIn : null,
+    takeout: typeof place.takeout === "boolean" ? place.takeout : null,
     reviews,
     googleMapsUri: place.googleMapsUri ?? "",
   };

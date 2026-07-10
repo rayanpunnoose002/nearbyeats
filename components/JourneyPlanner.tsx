@@ -42,6 +42,7 @@ const DEFAULT_FILTERS: JourneyFilters = {
 const DIETARY_OPTIONS: { value: DietaryPref; label: string }[] = [
   { value: "both",   label: "🍽️ Both"    },
   { value: "veg",    label: "🥗 Veg"     },
+  { value: "vegan",  label: "🌱 Vegan"   },
   { value: "nonveg", label: "🍗 Non-Veg" },
 ];
 
@@ -607,80 +608,143 @@ export default function JourneyPlanner({
 
       {/* ── Route map ── */}
       {journey && (
-        <>
-          <JourneyMap
-            key={journey.encodedPolyline}
-            encodedPolyline={journey.encodedPolyline}
-            originCoords={journey.originCoords}
-            destCoords={journey.destCoords}
-            waypoints={journey.waypoints}
-            originName={origin}
-            destName={destination}
-            distanceMeters={journey.distanceMeters}
-            durationSeconds={journey.durationSeconds}
-            unit={unit}
-          />
-          {journey.waypoints.length === 0 && (
-            <p className="animate-fade-in-up text-sm text-zinc-500 dark:text-zinc-400">
-              Short trip — no stops needed!
-            </p>
-          )}
-        </>
+        <JourneyMap
+          key={journey.encodedPolyline}
+          encodedPolyline={journey.encodedPolyline}
+          originCoords={journey.originCoords}
+          destCoords={journey.destCoords}
+          waypoints={journey.waypoints}
+          originName={origin}
+          destName={destination}
+          distanceMeters={journey.distanceMeters}
+          durationSeconds={journey.durationSeconds}
+          unit={unit}
+        />
       )}
 
-      {/* ── Food stops ── */}
-      {journey?.waypoints.map((wp, i) => (
-        <div key={`${wp.lat}-${wp.lng}`} className="flex flex-col gap-4">
+      {/* ── Journey timeline ── */}
+      {journey && (
+        <div className="glass animate-fade-in-up rounded-2xl p-5">
+          <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+            Journey Plan
+          </p>
 
-          {/* Stop section header */}
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 stop-divider" />
-            <div className="glass flex items-center gap-2.5 rounded-full px-4 py-2 shadow-md">
-              <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
-                style={{ background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))" }}
-              >
-                {i + 1}
-              </span>
-              <span className="accent-gradient-text whitespace-nowrap text-sm font-semibold">
-                {wp.label}
-              </span>
-            </div>
-            <div className="h-px flex-1 stop-divider" />
-          </div>
+          <div className="relative flex flex-col">
+            {/* Continuous gradient spine */}
+            <div
+              className="pointer-events-none absolute bottom-3 top-3 w-0.5 rounded-full opacity-50"
+              style={{
+                left: "19px",
+                background: "linear-gradient(to bottom, var(--accent-from), var(--accent-to))",
+              }}
+              aria-hidden
+            />
 
-          {loadingStops[i] && (
-            <div className="glass flex items-center gap-3 rounded-2xl p-4 text-zinc-600 dark:text-zinc-300">
-              <span className="accent-gradient h-2 w-2 animate-ping rounded-full" />
-              Finding the best restaurants nearby…
-            </div>
-          )}
-
-          {!loadingStops[i] && (hotelsByStop[i]?.length ?? 0) === 0 && (
-            <div className="glass animate-fade-in-up flex flex-col items-center gap-2 rounded-2xl p-5 text-center">
-              <p className="text-2xl">🤔</p>
-              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                No restaurants found near this stop
-              </p>
-              <p className="text-xs text-zinc-400">
-                Try adjusting your filters or loosening the budget/rating requirements.
-              </p>
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(hotelsByStop[i] ?? []).map((hotel, j) => (
+            {/* ── Origin node ── */}
+            <div className="relative flex items-center gap-4 pb-8">
               <div
-                key={hotel.placeId}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${Math.min(j * 80, 400)}ms` }}
+                className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-lg"
+                style={{ background: "var(--accent-from)" }}
               >
-                <HotelCard hotel={hotel} unit={unit} />
+                A
+              </div>
+              <div>
+                <p className="text-sm font-bold leading-tight text-zinc-800 dark:text-zinc-100">
+                  {origin}
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-400">Start</p>
+              </div>
+            </div>
+
+            {/* Short trip — no waypoints */}
+            {journey.waypoints.length === 0 && (
+              <div className="relative flex items-center gap-4 pb-8">
+                <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center">
+                  <div className="h-3 w-3 rounded-full bg-zinc-300 ring-2 ring-white dark:bg-zinc-600 dark:ring-zinc-800" />
+                </div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Short trip — no food stops suggested along this route.
+                </p>
+              </div>
+            )}
+
+            {/* ── Waypoint stops ── */}
+            {journey.waypoints.map((wp, i) => (
+              <div key={`${wp.lat}-${wp.lng}`} className="relative flex items-start gap-4 pb-8">
+                {/* Node circle */}
+                <div
+                  className="relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-lg ring-2 ring-white/30 dark:ring-black/20"
+                  style={{ background: "linear-gradient(135deg, var(--accent-from), var(--accent-to))" }}
+                >
+                  {i + 1}
+                </div>
+
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold leading-tight text-zinc-800 dark:text-zinc-100">
+                    {wp.label}
+                  </p>
+                  <p className="mb-3 mt-0.5 text-xs text-zinc-400">
+                    Stop {i + 1} · Restaurants nearby
+                  </p>
+
+                  {loadingStops[i] && (
+                    <div className="flex items-center gap-3 rounded-xl bg-white/40 px-3 py-3 text-sm text-zinc-600 dark:bg-white/5 dark:text-zinc-400">
+                      <span className="accent-gradient h-2 w-2 animate-ping rounded-full" />
+                      Finding the best spots…
+                    </div>
+                  )}
+
+                  {!loadingStops[i] && (hotelsByStop[i]?.length ?? 0) === 0 && (
+                    <div className="animate-fade-in-up flex items-center gap-3 rounded-xl bg-white/40 px-3 py-3 dark:bg-white/5">
+                      <span className="text-xl">🤔</span>
+                      <div>
+                        <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                          No restaurants found near this stop
+                        </p>
+                        <p className="text-xs text-zinc-400">
+                          Try adjusting your filters or loosening budget / rating.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cards: horizontal scroll on mobile, grid on sm+ */}
+                  {!loadingStops[i] && (hotelsByStop[i]?.length ?? 0) > 0 && (
+                    <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
+                      {(hotelsByStop[i] ?? []).map((hotel, j) => (
+                        <div
+                          key={hotel.placeId}
+                          className="min-w-[190px] animate-fade-in-up sm:min-w-0"
+                          style={{ animationDelay: `${Math.min(j * 80, 400)}ms` }}
+                        >
+                          <HotelCard hotel={hotel} unit={unit} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
+
+            {/* ── Destination node ── */}
+            <div className="relative flex items-center gap-4">
+              <div
+                className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-lg"
+                style={{ background: "var(--accent-to)" }}
+              >
+                B
+              </div>
+              <div>
+                <p className="text-sm font-bold leading-tight text-zinc-800 dark:text-zinc-100">
+                  {destination}
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-400">Destination</p>
+              </div>
+            </div>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }

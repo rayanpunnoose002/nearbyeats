@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import FilterBar from "@/components/FilterBar";
 import RestaurantCard from "@/components/RestaurantCard";
 import SuggestButton from "@/components/SuggestButton";
@@ -10,9 +10,10 @@ import IOSAlert from "@/components/IOSAlert";
 import TabBar, { type AppTab } from "@/components/TabBar";
 import JourneyPlanner from "@/components/JourneyPlanner";
 import SplashScreen from "@/components/SplashScreen";
-import type { Filters, RestaurantSummary, DistanceUnit } from "@/lib/types";
-import { getCurrency, currencyForCountry } from "@/lib/types";
+import type { Filters, RestaurantSummary, DistanceUnit, SortBy } from "@/lib/types";
+import { getCurrency, currencyForCountry, googleMapsUrl } from "@/lib/types";
 import { isFavorite, getFavoriteIds } from "@/lib/favorites";
+import { addToHistory, getHistory, type HistoryItem } from "@/lib/history";
 
 type Coords = { lat: number; lng: number };
 
@@ -48,6 +49,8 @@ export default function Home() {
 
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [favoriteVersion, setFavoriteVersion] = useState(0);
+  const [sortBy, setSortBy] = useState<SortBy>("best");
+  const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
 
   const [splashDone, setSplashDone] = useState(false);
   const [mood, setMood] = useState<MascotMood>("idle");
@@ -192,15 +195,25 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords]);
 
-  // When showSavedOnly is on, filter results to saved places.
-  // favoriteVersion increments when any card heart is toggled, re-reading localStorage.
-  const savedIds = showSavedOnly || favoriteVersion >= 0
-    ? new Set(getFavoriteIds())
-    : new Set<string>();
-  const displayResults = showSavedOnly
-    ? results.filter((r) => savedIds.has(r.placeId))
-    : results;
+  // Load history on mount (client-only)
+  useEffect(() => { setRecentHistory(getHistory()); }, []);
+
+  function handleViewRestaurant(r: RestaurantSummary) {
+    addToHistory({ placeId: r.placeId, name: r.name, rating: r.rating, address: r.address });
+    setRecentHistory(getHistory());
+  }
+
+  // savedIds re-reads localStorage whenever favoriteVersion increments
+  const savedIds = useMemo(() => new Set(getFavoriteIds()), [favoriteVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const savedCount = results.filter((r) => savedIds.has(r.placeId)).length;
+
+  const displayResults = useMemo(() => {
+    const base = showSavedOnly ? results.filter((r) => savedIds.has(r.placeId)) : [...results];
+    if (sortBy === "rating")   return [...base].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    if (sortBy === "distance") return [...base].sort((a, b) => a.distanceMeters - b.distanceMeters);
+    if (sortBy === "popular")  return [...base].sort((a, b) => b.userRatingCount - a.userRatingCount);
+    return base; // "best" = server-ranked order
+  }, [results, showSavedOnly, savedIds, sortBy]);
 
   const FOOD_PARTICLES = [
     { emoji: "🍕", left: "8%",  duration: "18s", delay: "0s"   },
@@ -379,7 +392,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => runSearch(coords, filters)}
@@ -402,8 +415,21 @@ export default function Home() {
                         : "glass text-zinc-600 hover:text-red-500 dark:text-zinc-400"
                     }`}
                   >
-                    {showSavedOnly ? "❤️" : "🤍"} Saved{savedCount > 0 ? ` (${savedCount})` : ""}
+                    {showSavedOnly ? "❤️" : "🤍"} Saved ({savedCount})
                   </button>
+                )}
+                {/* Sort control */}
+                {results.length > 0 && (
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortBy)}
+                    className="rounded-lg border border-white/40 bg-white/50 px-2 py-1 text-xs backdrop-blur-sm focus:outline-none dark:border-white/10 dark:bg-black/20 dark:text-zinc-300"
+                  >
+                    <option value="best">⚡ Best match</option>
+                    <option value="rating">⭐ Top rated</option>
+                    <option value="distance">📍 Nearest</option>
+                    <option value="popular">🔥 Most reviewed</option>
+                  </select>
                 )}
               </div>
               <SuggestButton coords={coords} filters={filters} onPick={setSuggested} />
@@ -420,6 +446,7 @@ export default function Home() {
                   unit={unit}
                   currency={currency}
                   onFavoriteToggle={() => setFavoriteVersion((v) => v + 1)}
+                  onView={() => handleViewRestaurant(suggested)}
                 />
               </div>
             )}
@@ -438,6 +465,33 @@ export default function Home() {
                 <p className="text-2xl">🔍</p>
                 <p className="mt-2 font-medium text-zinc-700 dark:text-zinc-300">No restaurants found</p>
                 <p className="mt-1 text-sm text-zinc-500">Try widening your radius or loosening filters.</p>
+              </div>
+            )}
+
+            {/* Recently Viewed */}
+            {!showSavedOnly && recentHistory.length > 0 && (
+              <div className="animate-fade-in-up">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                  👁 Recently Viewed
+                </p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {recentHistory.map((item) => (
+                    <a
+                      key={item.placeId}
+                      href={googleMapsUrl(item.placeId, item.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="glass flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs transition hover:bg-white/60 dark:hover:bg-white/10"
+                    >
+                      <span className="max-w-[120px] truncate font-medium text-zinc-800 dark:text-zinc-200">
+                        {item.name}
+                      </span>
+                      {item.rating !== null && (
+                        <span className="shrink-0 text-zinc-400">⭐ {item.rating.toFixed(1)}</span>
+                      )}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -463,6 +517,7 @@ export default function Home() {
                       unit={unit}
                       currency={currency}
                       onFavoriteToggle={() => setFavoriteVersion((v) => v + 1)}
+                      onView={() => handleViewRestaurant(r)}
                     />
                   </div>
                 ))}

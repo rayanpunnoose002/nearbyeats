@@ -34,10 +34,11 @@ export async function GET(req: NextRequest) {
   );
 
   try {
-    const vegTypes = ["vegetarian_restaurant", "vegan_restaurant"];
     const includedPrimaryTypes =
-      dietaryPref === "veg"
-        ? vegTypes
+      dietaryPref === "vegan"
+        ? ["vegan_restaurant"]
+        : dietaryPref === "veg"
+        ? ["vegetarian_restaurant", "vegan_restaurant"]
         : cuisine
         ? [cuisine]
         : undefined;

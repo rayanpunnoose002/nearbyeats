@@ -16,6 +16,13 @@ const VEG_MEAL_TYPE_MAP: Record<string, string[]> = {
   dinner:    ["vegetarian_restaurant", "vegan_restaurant"],
 };
 
+const VEGAN_MEAL_TYPE_MAP: Record<string, string[]> = {
+  any:       ["vegan_restaurant"],
+  breakfast: ["vegan_restaurant", "cafe"],
+  lunch:     ["vegan_restaurant", "cafe"],
+  dinner:    ["vegan_restaurant"],
+};
+
 const BUDGET_TO_PRICE_LEVEL: Record<string, PriceLevel> = {
   "$":    "PRICE_LEVEL_INEXPENSIVE",
   "$$":   "PRICE_LEVEL_MODERATE",
@@ -49,7 +56,9 @@ export async function GET(request: NextRequest) {
       minRating,
       priceLevels: priceLevels.length ? priceLevels : undefined,
       includedPrimaryTypes:
-        dietaryPref === "veg"
+        dietaryPref === "vegan"
+          ? (VEGAN_MEAL_TYPE_MAP[mealType] ?? VEGAN_MEAL_TYPE_MAP.any)
+          : dietaryPref === "veg"
           ? (VEG_MEAL_TYPE_MAP[mealType] ?? VEG_MEAL_TYPE_MAP.any)
           : (MEAL_TYPE_MAP[mealType] ?? MEAL_TYPE_MAP.any),
     });
